@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centaurus Road roundabout: before and after</title>
+
+  <link rel="preload" as="image" href="https://static3.stuff.co.nz/roundaboutbefore-f917f7ab.jpg">
+  <link rel="preload" as="image" href="https://static3.stuff.co.nz/roundaboutafter-5b3e7907.jpg">
+
+  <!-- pym.js: makes the parent iframe auto-resize to fit this page's height -->
+  <script src="https://pym.nprapps.org/pym.v1.min.js"></script>
+
+  <style>
+    :root { --press-blue: #00467f; }
+    html, body { margin: 0; padding: 0; background: transparent; }
+    body { font-family: sans-serif; }
+
+    /* Standalone page — embed fills the iframe width naturally */
+    .ba-embed {
+      position: relative;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .ba-embed .main-stage{
+      position: relative;
+      width: 100%;
+      min-height: 300px;
+      aspect-ratio: 16 / 9;
+      background: #111;
+      cursor: pointer;
+      overflow: hidden;
+      border-radius: 2px;
+      display: block;
+      outline: none;
+    }
+    .ba-embed .main-stage:focus { box-shadow: 0 0 0 3px rgba(0,70,127,0.35); }
+
+    @media (max-width: 768px){
+      .ba-embed .main-stage{
+        aspect-ratio: 4 / 5;
+        min-height: 400px;
+      }
+    }
+
+    .ba-embed .layer{
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 0.8s ease-in-out;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .ba-embed .layer{ transition: none; }
+      .ba-embed .hint{ transition: none; }
+    }
+
+    .ba-embed .before{ z-index: 1; }
+    .ba-embed .after{ z-index: 2; opacity: 0; }
+    .ba-embed .is-active .after{ opacity: 1; }
+
+    .ba-embed .masthead-tag{
+      position: absolute;
+      top: 15px; left: 15px; z-index: 20;
+      background: var(--press-blue);
+      color: #fff; padding: 4px 10px;
+      font-weight: 700; font-size: 10px;
+      text-transform: uppercase; pointer-events: none;
+    }
+
+    .ba-embed .fs-button{
+      position: absolute;
+      bottom: 15px; right: 15px; z-index: 30;
+      background: rgba(0,0,0,0.6);
+      color: #fff; border: 1px solid #fff;
+      padding: 6px 10px; cursor: pointer;
+      font-size: 9px; text-transform: uppercase;
+    }
+
+    .ba-embed .label-line{
+      position: absolute;
+      bottom: 15px; left: 15px; z-index: 20;
+      color: #fff; font-size: 12px;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .ba-embed .label-line b{
+      font-family: Georgia, serif; font-size: 14px;
+      border-right: 1px solid rgba(255,255,255,0.4);
+      padding-right: 8px;
+    }
+
+    .ba-embed .hint{
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.95); color: #111;
+      padding: 10px 18px; z-index: 25;
+      font-size: 12px; font-weight: 700;
+      pointer-events: none; transition: 0.4s;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .ba-embed .is-active-once .hint{ opacity: 0; }
+
+    .ba-embed .main-stage:fullscreen{
+      width: 100vw;
+      height: 100vh;
+      max-height: none;
+      margin: 0;
+      border-radius: 0;
+      aspect-ratio: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ba-embed"
+       data-before="https://static3.stuff.co.nz/roundaboutbefore-f917f7ab.jpg"
+       data-after="https://static3.stuff.co.nz/roundaboutafter-5b3e7907.jpg"
+       data-label-before="2023"
+       data-label-after="2025">
+
+    <div class="main-stage" role="button" tabindex="0" aria-pressed="false" aria-label="Toggle before and after image">
+      <div class="masthead-tag">THE PRESS</div>
+      <div class="hint">CLICK TO COMPARE</div>
+      <button class="fs-button" type="button">Fullscreen ⛶</button>
+      <div class="layer before"></div>
+      <div class="layer after"></div>
+      <div class="label-line">
+        <b class="mainTitle">2023</b>
+        <span class="subTitle">Centaurus Road roundabout</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const root = document.querySelector('.ba-embed');
+      if (!root) return;
+
+      const stage = root.querySelector('.main-stage');
+      const btn = root.querySelector('.fs-button');
+      const beforeEl = root.querySelector('.layer.before');
+      const afterEl = root.querySelector('.layer.after');
+      const titleEl = root.querySelector('.mainTitle');
+
+      const beforeUrl = root.getAttribute('data-before');
+      const afterUrl  = root.getAttribute('data-after');
+      const labelBefore = root.getAttribute('data-label-before') || 'Before';
+      const labelAfter  = root.getAttribute('data-label-after') || 'After';
+
+      if (beforeUrl) beforeEl.style.backgroundImage = `url("${beforeUrl}")`;
+      if (afterUrl)  afterEl.style.backgroundImage  = `url("${afterUrl}")`;
+
+      function applyState(active) {
+        stage.classList.toggle('is-active', active);
+        stage.classList.add('is-active-once');
+        stage.setAttribute('aria-pressed', String(active));
+        if (titleEl) titleEl.textContent = active ? labelAfter : labelBefore;
+      }
+      function toggle(){ applyState(!stage.classList.contains('is-active')); }
+
+      stage.addEventListener('click', (e) => {
+        if (e.target.closest('button, a')) return;
+        toggle();
+      });
+
+      stage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+
+      if (btn) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
+          else document.exitFullscreen().catch(() => {});
+        });
+        document.addEventListener('fullscreenchange', () => {
+          btn.textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen ⛶';
+        });
+      }
+
+      // pym.js: tell the parent page how tall this embed is
+      // (Pym is loaded in the <head>; this initialises it as a child)
+      if (typeof pym !== 'undefined') {
+        new pym.Child({ polling: 500 });
+      }
+    })();
+  </script>
+</body>
+</html>
